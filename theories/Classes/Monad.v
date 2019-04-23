@@ -14,3 +14,6 @@ Class LawfulMonad m `{Monad m} : Prop :=
   ; bind_assoc : forall a b c (u : m a) (k : a -> m b) (h : b -> m c),
       bind (bind u k) h = bind u (fun x => bind (k x) h)
   }.
+
+Infix ">>=" := bind (at level 50, left associativity).
+Notation "u >> v" := (bind u (fun _ => v)) (at level 50, left associativity).

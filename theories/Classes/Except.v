@@ -31,11 +31,14 @@ Class LawfulMonadError e m `{Monad m} `{MonadError e m} : Prop :=
       catchError (catchError u k) h = catchError u (fun err => catchError (k err) h)
   ; catch_pure : forall a (x : a) h,
       catchError (pure x) h = pure x
-  ; catch_bind : forall a b (u : m a) (k : a -> m b) h,
-      catchError (u >>= k) h = tryError u >>= either h k
 
   ; catch_rethrow : forall a (u : m a),
       catchError u throwError = u
   ; left_zero_throw : forall err a b (k : a -> m b),
       throwError err >>= k = throwError err
   }.
+
+(** Although it looks nice, the following law is broken by [StateT]. *)
+Definition CatchBind e m `{Monad m} `{MonadError e m} : Prop :=
+  forall a b (u : m a) (k : a -> m b) h,
+      catchError (u >>= k) h = tryError u >>= either h (fun x => catchError (k x) h).

@@ -32,6 +32,15 @@ Instance MonadState_ExceptT {e s m} `{Monad m} `{MonadState s m} :
   MonadState s (ExceptT e m) :=
   MonadState_MonadTrans.
 
+Instance MonadError_ExceptT {e m} `{Monad m} : MonadError e (ExceptT e m) :=
+  {| throwError _ err := MkExceptT (pure (inl err))
+   ; catchError _ u h := MkExceptT (runExceptT u >>= fun x' =>
+       match x' with
+       | inl err => runExceptT (h err)
+       | inr x => pure (inr x)
+       end)
+  |}.
+
 (** ** Simple facts *)
 
 Lemma injective_runExceptT {e m a} (u v : ExceptT e m a) :
@@ -65,3 +74,22 @@ Qed.
 Instance LawfulMonadState_ExceptT {e s m} `{LawfulMonad m} `{MonadState s m}
   {_ : LawfulMonadState s m} : LawfulMonadState s (ExceptT e m) :=
   LawfulMonadState_LawfulMonadTrans.
+
+Instance LawfulMonadError_ExceptT {e m} `{LawfulMonad m} : LawfulMonadError e (ExceptT e m).
+Proof.
+  split; intros; apply injective_runExceptT; cbn.
+  all: try (rewrite bind_pure_l; reflexivity).
+  - rewrite bind_assoc. f_equal; apply functional_extensionality; intros [].
+    + reflexivity.
+    + rewrite bind_pure_l. reflexivity.
+  - transitivity (runExceptT u >>= pure).
+    + f_equal; apply functional_extensionality; intros []; auto.
+    + rewrite bind_pure_r; reflexivity.
+Qed.
+
+Theorem CatchBind_ExceptT {e m} `{LawfulMonad m} : CatchBind e (ExceptT e m).
+Proof.
+  red; intros; apply injective_runExceptT; cbn.
+  rewrite !bind_assoc. f_equal; apply functional_extensionality; intros [];
+    rewrite !bind_pure_l; reflexivity.
+Qed.

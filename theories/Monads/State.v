@@ -96,11 +96,6 @@ Proof.
   split; intros; cbn; apply injective_runStateT, functional_extensionality;
     cbn; intros; auto.
   - apply catch_throw.
-  - rewrite 2 catch_bind. unfold tryError.
-    rewrite !bind_assoc.
-    f_equal.
-    apply functional_extensionality; intros [ | []]; cbn.
-    all: rewrite bind_pure_l; reflexivity.
 Qed.
 
 Theorem LawfulMonadError_StateT_recoverable {e s m}
@@ -113,12 +108,22 @@ Proof.
   - apply catch_throw.
   - rewrite catch_catch. f_equal. apply functional_extensionality; intros [].
     reflexivity.
-  - rewrite 2 catch_bind. unfold tryError.
-    rewrite !bind_assoc.
-    f_equal.
-    apply functional_extensionality; intros [ [] | []]; cbn.
-    all: rewrite bind_pure_l; reflexivity.
   - transitivity (catchError (runStateT u x) throwError).
     + f_equal; apply functional_extensionality; intros []; auto.
     + auto.
+Qed.
+
+Theorem CatchBind_StateT_recoverable {e s m}
+  `{LawfulMonad m} {ME : MonadError (e * s) m} {LME : LawfulMonadError (e * s) m}
+  {CB_m : CatchBind (e * s) m} :
+  @CatchBind e (StateT s m) _ MonadError_StateT_recoverable.
+Proof.
+  red; intros; apply injective_runStateT, functional_extensionality;
+    cbn; intros.
+  rewrite 2 CB_m. unfold tryError.
+  rewrite !bind_assoc.
+  f_equal.
+  apply functional_extensionality; intros [ [] | []]; cbn.
+  + rewrite bind_pure_l; reflexivity.
+  + rewrite catch_pure, bind_pure_l; reflexivity.
 Qed.

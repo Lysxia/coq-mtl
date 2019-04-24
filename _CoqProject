@@ -2,6 +2,7 @@
 theories/Classes/Monad.v
 theories/Classes/Trans.v
 theories/Classes/State.v
+theories/Classes/Except.v
 theories/Classes/All.v
 theories/Monads/Identity.v
 theories/Monads/State.v

@@ -36,8 +36,9 @@ Proof.
   destruct u, v; intros; f_equal; auto.
 Qed.
 
-Instance LawfulMonad_StateT s m `{LawfulMonad m} : LawfulMonad (StateT s m) := {}.
+Instance LawfulMonad_StateT s m `{LawfulMonad m} : LawfulMonad (StateT s m).
 Proof.
+  split.
   all: intros; apply injective_runStateT, functional_extensionality; intros; cbn.
   - rewrite bind_pure_l. reflexivity.
   - replace (fun _ => _) with (fun z : a * s => pure z).
@@ -47,16 +48,18 @@ Proof.
     f_equal. apply functional_extensionality. intros []. reflexivity.
 Qed.
 
-Instance LawfulMonadTrans_StateT s m : LawfulMonadTrans (StateT s) := {}.
+Instance LawfulMonadTrans_StateT s m : LawfulMonadTrans (StateT s).
 Proof.
+  split.
   all: intros; cbn; f_equal; apply functional_extensionality; intros.
   - rewrite bind_pure_l; reflexivity.
   - rewrite 2 bind_assoc; f_equal; apply functional_extensionality; intros.
     rewrite bind_pure_l. reflexivity.
 Qed.
 
-Instance LawfulMonadState_StateT s m `{LawfulMonad m} : LawfulMonadState s (StateT s m) := {}.
+Instance LawfulMonadState_StateT s m `{LawfulMonad m} : LawfulMonadState s (StateT s m).
 Proof.
+  split.
   all: intros; cbn; apply injective_runStateT, functional_extensionality; cbn; intros.
   all: rewrite ?bind_pure_l; try reflexivity.
 Qed.

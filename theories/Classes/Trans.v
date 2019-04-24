@@ -1,3 +1,5 @@
+(** * Monad transformers *)
+
 From mtl.Classes Require Import
   Monad.
 
@@ -7,6 +9,9 @@ Implicit Types m n : Type -> Type.
 Class MonadTrans t : Type :=
   { lift : forall m (Monad_m : Monad m) a, m a -> t m a
   }.
+(** Another possibility is to add a [LawfulMonad] constraint:
+    [lift] might need the lawfulness (I have no examples).
+  *)
 
 Arguments lift {t _ m Monad_m} [a].
 

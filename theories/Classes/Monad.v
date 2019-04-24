@@ -1,3 +1,5 @@
+(** * Monads *)
+
 Implicit Types m : Type -> Type.
 
 Class Monad m : Type :=
@@ -17,3 +19,9 @@ Class LawfulMonad m `{Monad m} : Prop :=
 
 Infix ">>=" := bind (at level 50, left associativity).
 Notation "u >> v" := (bind u (fun _ => v)) (at level 50, left associativity).
+
+(** In theory, the laws are part of the definition of a "monad",
+    so [LawfulMonad] is what should really be named [Monad], and the record
+    of operations [Monad] should really be named something else
+    ([PreMonad]? [Magmad]?).
+  *)

@@ -2,3 +2,5 @@
 theories/Classes/Monad.v
 theories/Classes/Trans.v
 theories/Classes/State.v
+theories/Monads/Identity.v
+theories/Monads/State.v

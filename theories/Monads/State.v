@@ -13,20 +13,20 @@ Arguments MkStateT {s m a} _.
 Arguments runStateT {s m a} _.
 
 Instance Monad_StateT s m `{Monad m} : Monad (StateT s m) :=
-  { pure _ x := MkStateT (fun z => pure (x, z))
-  ; bind _ _ u k := MkStateT (fun z =>
-    runStateT u z >>= fun '(x, z1) =>
-    runStateT (k x) z1)
-  }.
+  {| pure _ x := MkStateT (fun z => pure (x, z))
+   ; bind _ _ u k := MkStateT (fun z =>
+     runStateT u z >>= fun '(x, z1) =>
+     runStateT (k x) z1)
+  |}.
 
 Instance MonadTrans_StateT s : MonadTrans (StateT s) :=
-  { lift _ _ _ u := MkStateT (fun z => u >>= fun x => pure (x, z))
-  }.
+  {| lift _ _ _ u := MkStateT (fun z => u >>= fun x => pure (x, z))
+  |}.
 
 Instance MonadState_StateT s m `{Monad m} : MonadState s (StateT s m) :=
-  { get := MkStateT (fun z => pure (z, z))
-  ; put z := MkStateT (fun _ => pure (tt, z))
-  }.
+  {| get := MkStateT (fun z => pure (z, z))
+   ; put z := MkStateT (fun _ => pure (tt, z))
+  |}.
 
 Definition State s : Type -> Type := StateT s Identity.
 

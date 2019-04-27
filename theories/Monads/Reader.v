@@ -74,5 +74,6 @@ Proof.
   destruct H1.
   split; intros; apply injective_runReaderT, functional_extensionality; cbn; intros;
     auto.
-  rewrite catch_throw; reflexivity.
+  - rewrite catch_throw; reflexivity.
+  - apply natural_catch.
 Qed.

@@ -88,6 +88,16 @@ Proof.
   all: rewrite ?bind_pure_l; try reflexivity.
 Qed.
 
+Definition first {a a' b} (f : a -> a') (p : a * b) : a' * b :=
+  let '(x, y) := p in
+  (f x, y).
+
+Lemma mapM_first {m} `{Monad m} {a a' b} (f : a -> a') (u : m (a * b)%type) :
+  (u >>= fun '(x, y) => pure (f x, y)) = (mapM (first f) u).
+Proof.
+  unfold mapM; f_equal; apply functional_extensionality; intros []; reflexivity.
+Qed.
+
 Instance LawfulMonadError_StateT {e s m}
   `{LawfulMonad m} {ME : MonadError e m} {LME : LawfulMonadError e m} :
   LawfulMonadError e (StateT s m).
@@ -96,6 +106,10 @@ Proof.
   split; intros; cbn; apply injective_runStateT, functional_extensionality;
     cbn; intros; auto.
   - apply catch_throw.
+  - rewrite mapM_first, natural_catch.
+    f_equal.
+    + rewrite <- mapM_first; reflexivity.
+    + apply functional_extensionality; intros; rewrite <- mapM_first; reflexivity.
 Qed.
 
 Theorem LawfulMonadError_StateT_recoverable {e s m}
@@ -111,6 +125,10 @@ Proof.
   - transitivity (catchError (runStateT u x) throwError).
     + f_equal; apply functional_extensionality; intros []; auto.
     + auto.
+  - rewrite mapM_first, natural_catch.
+    f_equal.
+    + rewrite <- mapM_first; reflexivity.
+    + apply functional_extensionality; intros []; rewrite <- mapM_first; reflexivity.
 Qed.
 
 Theorem CatchBind_StateT_recoverable {e s m}

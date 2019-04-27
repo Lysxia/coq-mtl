@@ -85,6 +85,10 @@ Proof.
   - transitivity (runExceptT u >>= pure).
     + f_equal; apply functional_extensionality; intros []; auto.
     + rewrite bind_pure_r; reflexivity.
+  - rewrite !bind_assoc; f_equal; apply functional_extensionality; intros [];
+      rewrite !bind_pure_l.
+    + f_equal; apply functional_extensionality; intros; reflexivity.
+    + reflexivity.
 Qed.
 
 Theorem CatchBind_ExceptT {e m} `{LawfulMonad m} : CatchBind e (ExceptT e m).

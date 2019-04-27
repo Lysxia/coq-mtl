@@ -36,6 +36,8 @@ Class LawfulMonadError e m `{Monad m} `{MonadError e m} : Prop :=
       catchError u throwError = u
   ; left_zero_throw : forall err a b (k : a -> m b),
       throwError err >>= k = throwError err
+  ; natural_catch : forall a b (f : a -> b) u h,
+      mapM f (catchError u h) = catchError (mapM f u) (fun err => mapM f (h err))
   }.
 
 (** Although it looks nice, the following law is broken by [StateT]. *)

@@ -104,6 +104,15 @@ Proof.
     + apply functional_extensionality; intros.
       rewrite section_throwError; reflexivity.
   - rewrite section_throwError, left_zero_throw; reflexivity.
+  - rewrite section_catchError, section_bind.
+    assert (spf : (fun x => section _ (retract _ (pure (f x))))
+                = (fun x => pure (f x) : m _)).
+    { apply functional_extensionality; intros; rewrite section_pure; reflexivity. }
+    rewrite spf at 1 2.
+    fold (mapM f (catchError (section _ u) (fun err => section _ (h err)))).
+    rewrite natural_catch.
+    do 2 f_equal; apply functional_extensionality; intros.
+    rewrite section_bind, spf; reflexivity.
 Qed.
 
 End Error.

@@ -135,3 +135,5 @@ Proof.
     + apply functional_extensionality; intros []; rewrite bind_pure_l.
       rewrite mappend_mempty_r; reflexivity.
 Qed.
+
+End Laws.

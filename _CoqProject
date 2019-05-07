@@ -11,4 +11,5 @@ theories/Monads/Except.v
 theories/Monads/Reader.v
 theories/Monads/Writer.v
 theories/Monads/Cont.v
+theories/Monads/Select.v
 theories/Monads/Retract.v

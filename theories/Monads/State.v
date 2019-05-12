@@ -58,6 +58,32 @@ Proof.
   destruct u, v; intros; f_equal; auto.
 Qed.
 
+(** [State] is equivalent to [s -> (a * s)] *)
+Definition runState {s a} (u : State s a) : s -> a * s :=
+  fun z => runIdentity (runStateT u z).
+
+Definition MkState {s a} (f : s -> a * s) : State s a :=
+  MkStateT (fun z => MkIdentity (f z)).
+
+Lemma runState_mono {s a} (u : State s a) : MkState (runState u) = u.
+Proof.
+  apply injective_runStateT, functional_extensionality.
+  intros; apply injective_runIdentity; auto.
+Qed.
+
+Lemma MkState_mono {s a} (f : s -> a * s) : runState (MkState f) = f.
+Proof.
+  reflexivity.
+Qed.
+
+Lemma MkState_state {s a} (f : s -> a * s)
+  : MkState f = state f.
+Proof.
+  unfold MkState; cbn.
+  f_equal; apply functional_extensionality; intros.
+  destruct f; reflexivity.
+Qed.
+
 (** ** Laws *)
 
 Instance LawfulMonad_StateT {s m} `{LawfulMonad m} : LawfulMonad (StateT s m).
@@ -145,3 +171,106 @@ Proof.
   + rewrite bind_pure_l; reflexivity.
   + rewrite catch_pure, bind_pure_l; reflexivity.
 Qed.
+
+(** ** Completeness *)
+(** We give a second characterization of "lawful instances" and show they
+    are equivalent. *)
+
+Class MonadState' s m : Type :=
+  state' : forall a, State s a -> m a.
+
+Arguments state' {s m _} [a].
+
+Class LawfulMonadState' s m `{Monad m} `{MonadState' s m} : Type :=
+  state'_morphism :> MonadMorphism (State s) m state'.
+
+Section Completeness.
+
+(** [MonadState] and [MonadState'] instances can be defined in terms of each other. *)
+
+(** Using [get] and [put] from the pure [State] monad. *)
+Instance MonadState_MonadState' {s m} `{MonadState' s m} : MonadState s m | 9 :=
+  {| get := state' get
+   ; put z := state' (put z)
+  |}.
+
+Instance MonadState'_MonadState {s m} `{Monad m} `{MonadState s m} : MonadState' s m | 9 :=
+  fun _ u => state (runState u).
+
+(** The two definitions are inverses of each other. *)
+
+Lemma MS_MS'_MS {s m} `{LawfulMonad m} {MS : MonadState s m} {_ : LawfulMonadState s m}
+  : @MonadState_MonadState' _ _ _ = MS.
+Proof.
+  destruct MS. unfold MonadState_MonadState', MonadState'_MonadState, state'; cbn.
+  f_equal.
+  - rewrite <- get_state; auto.
+  - apply functional_extensionality; intros. unfold runState; cbn.
+    rewrite <- put_state; auto.
+Qed.
+
+Lemma MS'_MS_MS' {s m} `{Monad m} {MS' : MonadState' s m} {_ : LawfulMonadState' s m}
+  : @MonadState'_MonadState _ _ _ _ = MS'.
+Proof.
+  unfold MonadState_MonadState', MonadState'_MonadState; cbn.
+  apply functional_extensionality_dep; intros a.
+  apply functional_extensionality; intros u.
+  replace (MS' a u) with (state' u); try reflexivity.
+  replace u with (state (runState u) : State s a) at 2.
+  - unfold state at 2.
+    rewrite morphism_bind.
+    unfold state.
+    f_equal; try reflexivity.
+    apply functional_extensionality; intros z.
+    destruct runState.
+    rewrite morphism_bind.
+    f_equal; try reflexivity.
+    apply functional_extensionality; intros; rewrite morphism_pure.
+    reflexivity.
+  - apply injective_runStateT, functional_extensionality; intros; cbn.
+    unfold runState.
+    destruct (runStateT u) as [[]].
+    reflexivity.
+Qed.
+
+(** And the laws imply each other. *)
+
+Theorem LawfulMonadState'_LawfulMonadState {s m}
+  `{LawfulMonad m} `{MonadState s m} {LMS : LawfulMonadState s m}
+  : LawfulMonadState' s m.
+Proof.
+  split; intros; unfold state', MonadState'_MonadState, state; cbn.
+  - rewrite <- bind_assoc, get_put, bind_pure_l. reflexivity.
+  - rewrite bind_assoc. f_equal. apply functional_extensionality; intros; cbn.
+    unfold runState; cbn.
+    destruct (runStateT u x) as [[]]; cbn.
+    rewrite bind_assoc, bind_pure_l, <- bind_assoc, put_get, bind_assoc, bind_pure_l.
+    destruct runStateT as [[]]; cbn.
+    rewrite <- bind_assoc, put_put.
+    reflexivity.
+Qed.
+
+Theorem LawfulMonadState_LawfulMonadState' {s m}
+  `{LawfulMonad m} `{MonadState' s m} {LMS' : LawfulMonadState' s m}
+  : LawfulMonadState s m.
+Proof.
+  split; intros; cbn.
+  all: try rewrite <- morphism_pure; try rewrite <- morphism_bind.
+  all: try reflexivity.
+  - rewrite <- (morphism_bind _ _ _ (fun _ => pure z)).
+    reflexivity.
+  - transitivity (state' (get >>= fun z1 => get >>= fun z2 => pure (z1, z2))).
+    + rewrite morphism_bind.
+      f_equal. apply functional_extensionality; intros.
+      rewrite morphism_bind.
+      f_equal. apply functional_extensionality; intros.
+      rewrite morphism_pure.
+      reflexivity.
+    + rewrite get_get.
+      rewrite morphism_bind.
+      f_equal. apply functional_extensionality; intros.
+      rewrite morphism_pure.
+      reflexivity.
+Qed.
+
+End Completeness.

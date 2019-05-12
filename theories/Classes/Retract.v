@@ -150,7 +150,6 @@ Proof.
       f_equal; apply functional_extensionality; intros; rewrite section_pure; reflexivity.
     + rewrite section_get, get_get.
       f_equal; apply functional_extensionality; intros; rewrite section_pure; reflexivity.
-  - rewrite section_get, section_pure, nullipotent_get; reflexivity.
 Qed.
 
 End State.

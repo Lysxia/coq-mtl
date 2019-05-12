@@ -26,8 +26,6 @@ Class LawfulMonadState s m `{Monad m} `{MonadState s m} : Prop :=
   ; get_get :
         (get >>= fun z1 => get >>= fun z2 => pure (z1, z2))
       = (get >>= fun z => pure (z, z))
-    (* [get] has no side effect. *)
-  ; nullipotent_get : get >> pure tt = pure tt
   }.
 
 Section StateFacts.
@@ -53,6 +51,13 @@ Proof.
     rewrite bind_pure_l; reflexivity.
   - rewrite bind_assoc; f_equal; apply functional_extensionality; intros.
     rewrite bind_pure_l; reflexivity.
+Qed.
+
+(** [get] has no side effect. *)
+Lemma nullipotent_get : get >> pure tt = pure tt.
+Proof.
+  rewrite <- get_put, get_get_k.
+  reflexivity.
 Qed.
 
 Lemma nullipotent_get_k : forall a (u : m a),
@@ -112,8 +117,4 @@ Proof.
       rewrite morphism_pure; reflexivity.
     + rewrite morphism_bind; f_equal; apply functional_extensionality; intros.
       rewrite morphism_pure; reflexivity.
-  - transitivity (lift (get >> pure tt)).
-    + rewrite morphism_bind; f_equal; apply functional_extensionality; intros.
-      rewrite morphism_pure; reflexivity.
-    + rewrite nullipotent_get, morphism_pure; reflexivity.
 Qed.

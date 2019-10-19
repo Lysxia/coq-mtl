@@ -1,5 +1,18 @@
 (** * The state monad transformer *)
 
+(** In this file:
+  - The [StateT] monad transformer.
+  - Instances:
+    + [Monad], [LawfulMonad]
+    + [MonadTrans], [LawfulMonadTrans]
+    + [MonadState], [LawfulMonadState]
+    + [MonadError], [LawfulMonadError]
+    + A "recoverable" version of [MonadError], with its [LawfulMonadError] proof,
+      satisfying an additional [CatchBind] law.
+  - Completeness result for [MonadState] laws ([get_get], [get_put], [put_get], [put_put]):
+    they are equivalent to saying that [state'] is a monad morphism.
+ *)
+
 From Coq Require Import FunctionalExtensionality.
 
 From mtl.Classes Require Import All.

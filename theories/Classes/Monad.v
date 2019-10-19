@@ -1,5 +1,7 @@
 (** * Monads *)
 
+From mtl.Classes Require Import Tactics.
+
 Implicit Types m : Type -> Type.
 
 Class Monad m : Type :=
@@ -28,3 +30,9 @@ Class LawfulMonad m `{Monad m} : Prop :=
     of operations [Monad] should really be named something else
     ([PreMonad]? [Magmad]?).
   *)
+
+Instance Proper_bind {m a b} `{Monad m}
+  : Proper (eq ==> pw eq ==> eq) (bind (a := a) (b := b)).
+Proof.
+  repeat intro; f_equal; auto using functional_extensionality.
+Qed.

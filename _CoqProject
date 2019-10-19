@@ -1,4 +1,5 @@
 -Q theories/ mtl
+theories/Classes/Tactics.v
 theories/Classes/Monad.v
 theories/Classes/Trans.v
 theories/Classes/State.v

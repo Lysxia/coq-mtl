@@ -40,10 +40,13 @@ Class LawfulMonadReader r m `{Monad m} `{MonadReader r m} : Prop :=
   ; local_ask : forall f,
       local f ask = (ask >>= fun z => pure (f z))
 
+  ; local_const : forall a (u : m a),
+      (ask >>= fun z => local (fun _ => z) u) = u
+
     (* [local] is a monoid morphism between (reversed) [r -> r] and [m a -> m a]. *)
   ; local_id : forall a (u : m a),
       local (fun x => x) u = u
-  ; local_compose : forall (f g : r -> r) a (u : m a),
+  ; local_local : forall (f g : r -> r) a (u : m a),
       local f (local g u) = local (fun z => g (f z)) u
 
     (* [local f] is a monad morphism between [m] and [m]. *)
@@ -89,5 +92,16 @@ End AskFacts.
 
 Context`{MonadReader r m}.
 Context {LMR : LawfulMonadReader r m}.
+
+Lemma local_const_k a (k : r -> m a)
+  : (ask >>= fun z => local (fun _ => z) (k z))
+  = ask >>= k.
+Proof.
+  transitivity (ask >>= fun z => local (fun _ => z) (ask >>= k)).
+  - f_equal; apply functional_extensionality; intros.
+    rewrite morphism_bind, local_ask, ask_nullipotent, bind_pure_l.
+    reflexivity.
+  - rewrite local_const; reflexivity.
+Qed.
 
 End ReaderFacts.

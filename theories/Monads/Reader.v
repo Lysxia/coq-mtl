@@ -1,5 +1,15 @@
 (** * The reader monad transformer *)
 
+(** In this file:
+  - The [ReaderT] monad transformer.
+  - Instances:
+    + [Monad], [LawfulMonad]
+    + [MonadTrans], [LawfulMonadTrans]
+    + [MonadState], [LawfulMonadState]
+    + [MonadReader], [LawfulMonadReader]
+    + [MonadError], [LawfulMonadError]
+ *)
+
 From Coq Require Import FunctionalExtensionality.
 
 From mtl.Classes Require Import All.
@@ -29,6 +39,11 @@ Instance MonadTrans_ReaderT {r} : MonadTrans (ReaderT r) :=
 Instance MonadState_ReaderT {r s m} `{MonadState s m} : MonadState s (ReaderT r m) :=
   {| get := MkReaderT (fun _ => get)
    ; put z := MkReaderT (fun _ => put z)
+  |}.
+
+Instance MonadReader_ReaderT {r m} `{Monad m} : MonadReader r (ReaderT r m) :=
+  {| ask := MkReaderT (fun z => pure z)
+   ; local := fun f _ u => MkReaderT (fun z => runReaderT u (f z))
   |}.
 
 Instance MonadError_ReaderT {r e m} `{MonadError e m} : MonadError e (ReaderT r m) :=
@@ -66,6 +81,13 @@ Proof.
   destruct H1.
   split; intros; apply injective_runReaderT, functional_extensionality; cbn; intros;
     auto.
+Qed.
+
+Instance LawfulMonadReader_ReaderT {r m} `{LawfulMonad m} :
+  LawfulMonadReader r (ReaderT r m).
+Proof.
+  split; try split; intros; try apply injective_runReaderT, functional_extensionality; cbn; intros.
+  all: repeat (rewrite ?bind_pure_l; reflexivity || f_equal; apply functional_extensionality; intros).
 Qed.
 
 Instance LawfulMonadError_ReaderT {r e m} `{LawfulMonadError e m} :

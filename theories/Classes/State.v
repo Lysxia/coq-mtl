@@ -1,3 +1,19 @@
+(** The [MonadState] class *)
+
+(** In this file:
+  - The [MonadState] class: [get] and [put].
+  - The [state] function, defined in terms of [get] and [put].
+    In Haskell mtl, this operation is overridable in [MonadState], but
+    it is expected to be equivalent to the default definition.
+    The two presentations ([get], [put] vs. [state]) are equivalent,
+    see [Monad.State.MonadState'].
+  - The [LawfulMonadState] class:
+    + [get_put], [put_get], [put_put], [get_get]
+  - Equation derived from those laws:
+    + [nullipotent_get]
+  - Monad transformers can just lift [LawfulMonadState].
+ *)
+
 From mtl.Classes Require Import Monad Trans.
 From Coq Require Import Setoid FunctionalExtensionality Relations Morphisms.
 

@@ -1,5 +1,14 @@
 (** * The exception monad transformer *)
 
+(** In this file:
+  - The [ExceptT] monad transformer.
+  - Instances:
+    + [Monad], [LawfulMonad]
+    + [MonadTrans], [LawfulMonadTrans]
+    + [MonadState], [LawfulMonadState] (derivable for all transformers)
+    + [MonadError], [LawfulMonadError], and [CatchBind]
+ *)
+
 From Coq Require Import FunctionalExtensionality.
 From mtl.Classes Require Import All.
 

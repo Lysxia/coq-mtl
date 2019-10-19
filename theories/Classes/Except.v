@@ -1,5 +1,13 @@
 (** * Exception effect *)
 
+(** In this file:
+  - The [MonadError] class: [throwError] and [catchError].
+  - The [LawfulMonadError] class:
+    + [catch_throw], [catch_catch], [catch_pure], [catch_rethrow], [left_zero_throw]
+    + [natural_catch] (by parametricity, but it's not provable in Coq)
+  - An extra [CatchBind] law (broken by [StateT]).
+ *)
+
 From mtl.Classes Require Import Monad Trans.
 
 Implicit Types e : Type.

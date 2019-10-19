@@ -3,6 +3,7 @@ theories/Classes/Monad.v
 theories/Classes/Trans.v
 theories/Classes/State.v
 theories/Classes/Except.v
+theories/Classes/Reader.v
 theories/Classes/All.v
 theories/Classes/Retract.v
 theories/Monads/Identity.v

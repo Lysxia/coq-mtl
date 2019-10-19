@@ -130,8 +130,6 @@ Definition MonadState_MonadTrans {s t m} `{MonadTrans t} `{Monad m} `{MonadState
   |}.
 
 Theorem LawfulMonadState_LawfulMonadTrans {s t m}
-  `{MonadTrans t}
-  `{forall m, Monad m -> Monad (t m)}
   `{LawfulMonadTrans t}
   `{LawfulMonad m}
   `{MonadState s m}

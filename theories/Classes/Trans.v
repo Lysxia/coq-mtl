@@ -21,4 +21,20 @@ Class MonadMorphism m n `{Monad m} `{Monad n} (f : forall a, m a -> n a) : Prop 
       f _ (bind u k) = bind (f _ u) (fun x => f _ (k x))
   }.
 
-Notation LawfulMonadTrans t := (forall m `{LawfulMonad m}, MonadMorphism m (t m) lift).
+Class LawfulMonadTrans t
+  `{MonadTrans t}
+  `{forall m, Monad m -> Monad (t m)}
+  `{forall m `{LawfulMonad m}, LawfulMonad (t m)} : Prop :=
+  lift_morphism :> forall m `{LawfulMonad m}, MonadMorphism m (t m) lift.
+
+Class MonadFunctor t : Type :=
+  mfmap : forall m n {Monad_m : Monad m} {Monad_n : Monad n},
+    (forall a, m a -> n a) -> forall a, t m a -> t n a.
+
+Class LawfulMonadFunctor t `{LawfulMonadTrans t} `{MonadFunctor t} : Prop :=
+  { proper_monad_functor : forall m n `(LawfulMonad m) `(LawfulMonad n) f,
+      MonadMorphism m n f ->
+      MonadMorphism (t m) (t n) (mfmap m n f)
+
+    (* Will probably need naturality *)
+  }.

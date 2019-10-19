@@ -16,7 +16,8 @@ Arguments local {r m _} _ [a].
 Definition reader {r m} `{Monad m} `{MonadReader r m} {a} (f : r -> a) : m a :=
   ask >>= fun z => pure (f z).
 
-Class LawfulMonadReader r m `{Monad m} `{MonadReader r m} : Type :=
+(* The laws about [ask] only. *)
+Class LawfulAsk r m `{Monad m} (ask : m r) : Prop :=
   { (* [ask] yields the same result when called at any point. *)
     ask_comm : forall a (u : m a),
         (ask >>= fun z =>
@@ -32,15 +33,18 @@ Class LawfulMonadReader r m `{Monad m} `{MonadReader r m} : Type :=
   ; ask_ask
       : (ask >>= fun z1 => ask >>= fun z2 => pure (z1, z2))
       = (ask >>= fun z => pure (z, z))
+  }.
 
+Class LawfulMonadReader r m `{Monad m} `{MonadReader r m} : Prop :=
+  { lawful_ask :> LawfulAsk r m ask
   ; local_ask : forall f,
       local f ask = (ask >>= fun z => pure (f z))
 
-    (* [local] is a monoid morphism between [r -> r] and [m a -> m a]. *)
+    (* [local] is a monoid morphism between (reversed) [r -> r] and [m a -> m a]. *)
   ; local_id : forall a (u : m a),
       local (fun x => x) u = u
   ; local_compose : forall (f g : r -> r) a (u : m a),
-      local f (local g u) = local (fun z => f (g z)) u
+      local f (local g u) = local (fun z => g (f z)) u
 
     (* [local f] is a monad morphism between [m] and [m]. *)
   ; local_morphism :> forall f, MonadMorphism m m (local f)

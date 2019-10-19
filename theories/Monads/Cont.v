@@ -37,14 +37,14 @@ Proof.
     reflexivity.
 Qed.
 
-Instance LawfulMonadTrans {r} : LawfulMonadTrans (ContT r).
+Instance LawfulMonadTrans_ContT {r} : LawfulMonadTrans (ContT r).
 Proof.
   split; intros; apply injective_runContT, functional_extensionality; intros; cbn.
   - rewrite bind_pure_l; reflexivity.
   - rewrite bind_assoc; reflexivity.
 Qed.
 
-Instance LawfulMonadState {r s m}
+Instance LawfulMonadState_ContT {r s m}
   `{LawfulMonad m} `{MonadState s m} {LMS : LawfulMonadState s m} :
   LawfulMonadState s (ContT r m) :=
   LawfulMonadState_LawfulMonadTrans.

@@ -8,6 +8,9 @@
     + [MonadState], [LawfulMonadState]
     + [MonadReader], [LawfulMonadReader]
     + [MonadError], [LawfulMonadError]
+  - Completeness for [ask] laws ([LawfulAsk]):
+    they are equivalent to saying that there is a monad morphism from [ReaderT r m] to [m]
+    compatible to [lift].
  *)
 
 From Coq Require Import FunctionalExtensionality.
@@ -98,4 +101,55 @@ Proof.
     auto.
   - rewrite catch_throw; reflexivity.
   - apply natural_catch.
+Qed.
+
+(** ** Characterization of lawful [ask] (without [local]) as a retraction from [ReaderT]. *)
+
+Class MonadReader' r m : Type :=
+  runReaderT' : forall a, ReaderT r m a -> m a.
+
+Arguments runReaderT' {r m _} [a].
+
+Class LawfulMonadReader' r m {M : Monad m} `{MR' : MonadReader' r m} : Type :=
+  { MonadMorphism_runReaderT' :> MonadMorphism (ReaderT r m) m runReaderT'
+  ; runReaderT'_lift : forall a (u : m a), runReaderT' (lift u) = u
+  }.
+
+Definition ask' {r m} `{Monad m} `{MonadReader' r m} : m r :=
+  runReaderT' ask.
+
+Lemma LawfulAsk_LawfulMonadReader' r m
+  `{LawfulMonad m} `{LawfulMonadReader' r m (M := _)} : LawfulAsk r m ask'.
+Proof.
+  split; intros; unfold ask'.
+  - transitivity (runReaderT' (ask >>= fun z => lift u >>= fun x => pure (z, x)));
+      [ | transitivity (runReaderT' (lift u >>= fun x => ask >>= fun z => pure (z, x))) ].
+    2: rewrite ask_comm; reflexivity.
+    all: repeat (rewrite morphism_bind, ?runReaderT'_lift;
+             f_equal; apply functional_extensionality; intros);
+           rewrite morphism_pure; reflexivity.
+  - transitivity (runReaderT' (ask >> lift u)).
+    + rewrite morphism_bind; f_equal; apply functional_extensionality; intros.
+      rewrite runReaderT'_lift; reflexivity.
+    + rewrite ask_nullipotent, runReaderT'_lift; reflexivity.
+  - evar (e1 : ReaderT r m (r * r)%type). evar (e2 : ReaderT r m (r * r)%type).
+    transitivity (runReaderT' e1); [ | transitivity (runReaderT' e2); [ f_equal | ] ]; subst e1 e2.
+    2: apply ask_ask.
+    all: repeat (rewrite morphism_bind; f_equal; apply functional_extensionality; intros);
+      rewrite morphism_pure; reflexivity.
+Qed.
+
+Definition MonadReader'_ask {r m} `{Monad m} (ask : m r) : MonadReader' r m :=
+  fun _ u => ask >>= runReaderT u.
+
+Lemma LawfulMonadReader'_LawfulAsk r m `{LawfulMonad m} (ask : m r) {LA : LawfulAsk r m ask}
+  : @LawfulMonadReader' r m _ (MonadReader'_ask ask).
+Proof.
+  repeat split; intros; cbn; unfold runReaderT', MonadReader'_ask; cbn.
+  1, 3: rewrite ask_nullipotent; reflexivity.
+  - transitivity (ask >>= (fun z1 => ask >>= fun z2 => runReaderT u z2 >>= fun x => runReaderT (k x) z1)).
+    + rewrite ask_ask_k. reflexivity.
+    + rewrite ask_comm_k.
+      rewrite bind_assoc; f_equal; apply functional_extensionality; intros.
+      rewrite ask_comm_k. reflexivity.
 Qed.

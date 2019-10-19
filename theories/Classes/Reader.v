@@ -52,9 +52,42 @@ Class LawfulMonadReader r m `{Monad m} `{MonadReader r m} : Prop :=
 
 Section ReaderFacts.
 
-Context r m.
-Context `{Monad m} `{MonadReader r m}.
+Context {r m}.
+Context `{Monad m}.
 Context {LM : LawfulMonad m}.
+
+Section AskFacts.
+
+Context {ask : m r}.
+Context {LA : LawfulAsk r m ask}.
+
+Lemma ask_comm_k a b (u : m a) (k : r -> a -> m b)
+  : (ask >>= fun z =>
+     u   >>= fun x => k z x)
+  = (u   >>= fun x =>
+     ask >>= fun z => k z x).
+Proof.
+  transitivity ((ask >>= fun z => u >>= fun x => pure (z, x)) >>= fun zx => k (fst zx) (snd zx));
+    [ | rewrite ask_comm ].
+  all: do 2 (rewrite bind_assoc; f_equal; apply functional_extensionality; intros);
+    rewrite bind_pure_l; reflexivity.
+Qed.
+
+Lemma ask_ask_k a (k : r -> r -> m a)
+  : (ask >>= fun z1 => ask >>= fun z2 => k z1 z2)
+  = (ask >>= fun z => k z z).
+Proof.
+  transitivity ((ask >>= fun z => pure (z, z)) >>= fun zz => k (fst zz) (snd zz)).
+  - rewrite <- ask_ask.
+    do 2 (rewrite bind_assoc; f_equal; apply functional_extensionality; intros).
+    rewrite bind_pure_l; reflexivity.
+  - rewrite bind_assoc; f_equal; apply functional_extensionality; intros.
+    rewrite bind_pure_l; reflexivity.
+Qed.
+
+End AskFacts.
+
+Context`{MonadReader r m}.
 Context {LMR : LawfulMonadReader r m}.
 
 End ReaderFacts.

@@ -144,12 +144,6 @@ Proof.
     + apply functional_extensionality; intros; rewrite section_put; reflexivity.
   - rewrite section_get, section_put, section_pure, put_get; reflexivity.
   - rewrite !section_put, put_put; reflexivity.
-  - f_equal. rewrite section_get at 1 3.
-    transitivity (get >>= (fun z1 => get >>= fun z2 => pure (z1, z2)) : m _).
-    + f_equal; apply functional_extensionality; intros; rewrite section_bind, section_get.
-      f_equal; apply functional_extensionality; intros; rewrite section_pure; reflexivity.
-    + rewrite section_get, get_get.
-      f_equal; apply functional_extensionality; intros; rewrite section_pure; reflexivity.
 Qed.
 
 End State.

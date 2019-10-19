@@ -9,7 +9,7 @@
     + [MonadError], [LawfulMonadError]
     + A "recoverable" version of [MonadError], with its [LawfulMonadError] proof,
       satisfying an additional [CatchBind] law.
-  - Completeness result for [MonadState] laws ([get_get], [get_put], [put_get], [put_put]):
+  - Completeness result for [MonadState] laws ([get_put], [put_get], [put_put]):
     they are equivalent to saying that [state'] is a monad morphism.
  *)
 
@@ -273,18 +273,6 @@ Proof.
   all: try reflexivity.
   - rewrite <- (morphism_bind _ _ _ (fun _ => pure z)).
     reflexivity.
-  - transitivity (state' (get >>= fun z1 => get >>= fun z2 => pure (z1, z2))).
-    + rewrite morphism_bind.
-      f_equal. apply functional_extensionality; intros.
-      rewrite morphism_bind.
-      f_equal. apply functional_extensionality; intros.
-      rewrite morphism_pure.
-      reflexivity.
-    + rewrite get_get.
-      rewrite morphism_bind.
-      f_equal. apply functional_extensionality; intros.
-      rewrite morphism_pure.
-      reflexivity.
 Qed.
 
 End Completeness.

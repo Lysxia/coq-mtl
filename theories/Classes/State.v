@@ -8,9 +8,9 @@
     The two presentations ([get], [put] vs. [state]) are equivalent,
     see [Monad.State.MonadState'].
   - The [LawfulMonadState] class:
-    + [get_put], [put_get], [put_put], [get_get]
+    + [get_put], [put_get], [put_put]
   - Equation derived from those laws:
-    + [nullipotent_get]
+    + [get_get], [nullipotent_get]
   - Monad transformers can just lift [LawfulMonadState].
  *)
 
@@ -39,9 +39,6 @@ Class LawfulMonadState s m `{Monad m} `{MonadState s m} : Prop :=
   { get_put :   get    >>= put   = pure tt
   ; put_get : `(put z  >> get    = put z >> pure z)
   ; put_put : `(put z1 >> put z2 = put z2)
-  ; get_get :
-        (get >>= fun z1 => get >>= fun z2 => pure (z1, z2))
-      = (get >>= fun z => pure (z, z))
   }.
 
 Section StateFacts.
@@ -50,6 +47,25 @@ Context s m.
 Context `{Monad m} `{MonadState s m}.
 Context {LM : LawfulMonad m}.
 Context {LMS : LawfulMonadState s m}.
+
+Lemma get_get
+  : (get >>= fun z1 => get >>= fun z2 => pure (z1, z2))
+  = (get >>= fun z => pure (z, z)).
+Proof.
+  - transitivity (get >>= fun z0 => put z0 >>= fun _ => get >>= fun z => pure (z, z)).
+    + rewrite <- (bind_pure_l _ _ tt (fun _ => _)).
+      rewrite <- get_put.
+      rewrite bind_assoc.
+      f_equal; apply functional_extensionality; intros z1.
+      rewrite <- bind_assoc, put_get, bind_assoc.
+      transitivity (put z1 >> (get >>= fun z2 => pure (z1, z2))).
+      * f_equal; apply functional_extensionality; intros _.
+        rewrite bind_pure_l. reflexivity.
+      * rewrite <- 2 bind_assoc, put_get, 2 bind_assoc, 2 bind_pure_l.
+        reflexivity.
+    + rewrite <- bind_assoc, get_put, bind_pure_l.
+      reflexivity.
+Qed.
 
 (** Variants of [get_get] and [nullipotent_get] which quantify over the final
     continuation. They are equivalent, but a bit less convenient to prove directly
@@ -127,10 +143,4 @@ Proof.
   - rewrite put_get, morphism_bind; f_equal;
     apply functional_extensionality; intros; apply morphism_pure.
   - rewrite put_put; reflexivity.
-  - transitivity (lift (get >>= fun z => pure (z, z))).
-    + rewrite <- get_get.
-      do 2 (rewrite morphism_bind; f_equal; apply functional_extensionality; intros).
-      rewrite morphism_pure; reflexivity.
-    + rewrite morphism_bind; f_equal; apply functional_extensionality; intros.
-      rewrite morphism_pure; reflexivity.
 Qed.

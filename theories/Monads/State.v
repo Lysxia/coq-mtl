@@ -181,7 +181,7 @@ Class MonadState' s m : Type :=
 
 Arguments state' {s m _} [a].
 
-Class LawfulMonadState' s m `{Monad m} `{MonadState' s m} : Type :=
+Class LawfulMonadState' s m {M : Monad m} {MS : MonadState' s m} : Type :=
   state'_morphism :> MonadMorphism (State s) m state'.
 
 Section Completeness.
@@ -194,13 +194,14 @@ Instance MonadState_MonadState' {s m} `{MonadState' s m} : MonadState s m | 9 :=
    ; put z := state' (put z)
   |}.
 
-Instance MonadState'_MonadState {s m} `{Monad m} `{MonadState s m} : MonadState' s m | 9 :=
+(** Not an instance to avoid loops. *)
+Definition MonadState'_MonadState {s m} `{Monad m} `{MonadState s m} : MonadState' s m :=
   fun _ u => state (runState u).
 
 (** The two definitions are inverses of each other. *)
 
 Lemma MS_MS'_MS {s m} `{LawfulMonad m} {MS : MonadState s m} {_ : LawfulMonadState s m}
-  : @MonadState_MonadState' _ _ _ = MS.
+  : @MonadState_MonadState' _ _ MonadState'_MonadState = MS.
 Proof.
   destruct MS. unfold MonadState_MonadState', MonadState'_MonadState, state'; cbn.
   f_equal.
@@ -237,7 +238,7 @@ Qed.
 
 Theorem LawfulMonadState'_LawfulMonadState {s m}
   `{LawfulMonad m} `{MonadState s m} {LMS : LawfulMonadState s m}
-  : LawfulMonadState' s m.
+  : LawfulMonadState' s m (MS := MonadState'_MonadState).
 Proof.
   split; intros; unfold state', MonadState'_MonadState, state; cbn.
   - rewrite <- bind_assoc, get_put, bind_pure_l. reflexivity.

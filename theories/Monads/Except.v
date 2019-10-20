@@ -41,6 +41,12 @@ Instance MonadState_ExceptT {e s m} `{Monad m} `{MonadState s m} :
   MonadState s (ExceptT e m) :=
   MonadState_MonadTrans.
 
+Instance MonadReader_ExceptT {e r m} `{Monad m} `{MonadReader r m} :
+  MonadReader r (ExceptT e m) :=
+  {| ask := MkExceptT (ask >>= fun x => pure (inr x))
+   ; local := fun f _ u => MkExceptT (local f (runExceptT u))
+  |}.
+
 Instance MonadError_ExceptT {e m} `{Monad m} : MonadError e (ExceptT e m) :=
   {| throwError _ err := MkExceptT (pure (inl err))
    ; catchError _ u h := MkExceptT (runExceptT u >>= fun x' =>
@@ -83,6 +89,28 @@ Qed.
 Instance LawfulMonadState_ExceptT {e s m} `{LawfulMonad m} `{MonadState s m}
   {_ : LawfulMonadState s m} : LawfulMonadState s (ExceptT e m) :=
   LawfulMonadState_LawfulMonadTrans.
+
+Instance LawfulMonadReader_ExceptT {e r m} `{LawfulMonad m} `{MonadReader r m}
+  {_ : LawfulMonadReader r m} : LawfulMonadReader r (ExceptT e m).
+Proof.
+  repeat split; intros; apply injective_runExceptT; cbn.
+  all: repeat srewrite bind_pure_bind.
+  - setoid_rewrite <- ask_comm_k.
+    unbind; intros [].
+    + rewrite ask_nullipotent; reflexivity.
+    + srewrite bind_pure_bind; reflexivity.
+  - apply ask_nullipotent.
+  - apply ask_ask_k.
+  - rewrite morphism_bind, local_ask, bind_pure_bind. srewrite morphism_pure.
+    reflexivity.
+  - apply local_const.
+  - apply local_id.
+  - apply local_local.
+  - apply morphism_pure.
+  - rewrite morphism_bind. unbind; intros [].
+    + apply morphism_pure.
+    + reflexivity.
+Qed.
 
 Instance LawfulMonadError_ExceptT {e m} `{LawfulMonad m} : LawfulMonadError e (ExceptT e m).
 Proof.

@@ -72,18 +72,17 @@ Proof.
   all: intros; apply injective_runExceptT; cbn.
   - rewrite bind_pure_l. reflexivity.
   - transitivity (runExceptT u >>= pure).
-    + f_equal; apply functional_extensionality; intros []; auto.
+    + unbind; intros []; auto.
     + rewrite bind_pure_r. reflexivity.
-  - rewrite bind_assoc; f_equal; apply functional_extensionality; intros []; auto.
+  - rewrite bind_assoc; unbind; intros []; auto.
     rewrite bind_pure_l; reflexivity.
 Qed.
 
 Instance LawfulMonadTrans_ExceptT {e} : LawfulMonadTrans (ExceptT e).
 Proof.
-  split; intros; cbn.
+  split; intros; apply injective_runExceptT; cbn.
   - rewrite bind_pure_l; reflexivity.
-  - rewrite !bind_assoc; do 2 f_equal; apply functional_extensionality; intros.
-    rewrite bind_pure_l; reflexivity.
+  - rewrite !bind_assoc; srewrite bind_pure_l; reflexivity.
 Qed.
 
 Instance LawfulMonadState_ExceptT {e s m} `{LawfulMonad m} `{MonadState s m}
@@ -115,22 +114,19 @@ Qed.
 Instance LawfulMonadError_ExceptT {e m} `{LawfulMonad m} : LawfulMonadError e (ExceptT e m).
 Proof.
   split; intros; apply injective_runExceptT; cbn.
-  all: try (rewrite bind_pure_l; reflexivity).
-  - rewrite bind_assoc. f_equal; apply functional_extensionality; intros [].
+  all: try (rewrite ?bind_pure_l, ?bind_pure_bind; reflexivity).
+  - rewrite bind_assoc. unbind; intros [].
     + reflexivity.
     + rewrite bind_pure_l. reflexivity.
   - transitivity (runExceptT u >>= pure).
-    + f_equal; apply functional_extensionality; intros []; auto.
+    + unbind; intros []; reflexivity.
     + rewrite bind_pure_r; reflexivity.
-  - rewrite !bind_assoc; f_equal; apply functional_extensionality; intros [];
-      rewrite !bind_pure_l.
-    + f_equal; apply functional_extensionality; intros; reflexivity.
-    + reflexivity.
+  - rewrite !bind_assoc; unbind; intros [];
+      rewrite !bind_pure_l; reflexivity.
 Qed.
 
 Theorem CatchBind_ExceptT {e m} `{LawfulMonad m} : CatchBind e (ExceptT e m).
 Proof.
   red; intros; apply injective_runExceptT; cbn.
-  rewrite !bind_assoc. f_equal; apply functional_extensionality; intros [];
-    rewrite !bind_pure_l; reflexivity.
+  rewrite !bind_assoc; unbind; intros []; rewrite !bind_pure_l; reflexivity.
 Qed.

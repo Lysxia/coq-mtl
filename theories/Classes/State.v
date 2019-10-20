@@ -48,7 +48,7 @@ Context `{Monad m} `{MonadState s m}.
 Context {LM : LawfulMonad m}.
 Context {LMS : LawfulMonadState s m}.
 
-Lemma get_get
+Lemma get_get_pure
   : (get >>= fun z1 => get >>= fun z2 => pure (z1, z2))
   = (get >>= fun z => pure (z, z)).
 Proof.
@@ -72,13 +72,13 @@ Qed.
     when lifting [MonadState] through transformers.
   *)
 
-Lemma get_get_k : forall a (k : s -> s -> m a),
+Lemma get_get : forall a (k : s -> s -> m a),
     (get >>= fun z1 => get >>= fun z2 => k z1 z2)
   = (get >>= fun z => k z z).
 Proof.
   intros.
   transitivity ((get >>= fun z => pure (z, z)) >>= fun '(z1, z2) => k z1 z2).
-  - rewrite <- get_get.
+  - rewrite <- get_get_pure.
     repeat (rewrite bind_assoc; f_equal; apply functional_extensionality; intros).
     rewrite bind_pure_l; reflexivity.
   - rewrite bind_assoc; f_equal; apply functional_extensionality; intros.
@@ -88,7 +88,7 @@ Qed.
 (** [get] has no side effect. *)
 Lemma nullipotent_get : get >> pure tt = pure tt.
 Proof.
-  rewrite <- get_put, get_get_k.
+  rewrite <- get_put, get_get.
   reflexivity.
 Qed.
 

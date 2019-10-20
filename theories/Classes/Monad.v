@@ -36,3 +36,24 @@ Instance Proper_bind {m a b} `{Monad m}
 Proof.
   repeat intro; f_equal; auto using functional_extensionality.
 Qed.
+
+(* From Goal [bind u k1 = bind u k2] get to goal [forall a, k1 a = k2 a]. *)
+Ltac unbind :=
+  lazymatch goal with
+  | [ |- bind _ _ = bind _ _ ] => apply Proper_bind; try reflexivity; unfold pointwise_relation
+  | _ => fail "Not an equality between bind"
+  end.
+
+
+(* Derived equations *)
+Section MoreEquations.
+
+Context {m} `{LawfulMonad m}.
+
+Lemma bind_pure_bind a b c (u : m a) (f : a -> b) (k : b -> m c)
+  : bind (bind u (fun x => pure (f x))) k = bind u (fun x => k (f x)).
+Proof.
+  rewrite bind_assoc; unbind; intros; rewrite bind_pure_l; reflexivity.
+Qed.
+
+End MoreEquations.

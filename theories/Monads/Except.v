@@ -94,12 +94,12 @@ Instance LawfulMonadReader_ExceptT {e r m} `{LawfulMonad m} `{MonadReader r m}
 Proof.
   repeat split; intros; apply injective_runExceptT; cbn.
   all: repeat srewrite bind_pure_bind.
-  - setoid_rewrite <- ask_comm_k.
+  - setoid_rewrite <- ask_comm.
     unbind; intros [].
     + rewrite ask_nullipotent; reflexivity.
     + srewrite bind_pure_bind; reflexivity.
   - apply ask_nullipotent.
-  - apply ask_ask_k.
+  - apply ask_ask.
   - rewrite morphism_bind, local_ask, bind_pure_bind. srewrite morphism_pure.
     reflexivity.
   - apply local_const.

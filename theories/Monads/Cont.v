@@ -74,13 +74,13 @@ Proof.
   repeat split; intros; apply injective_runContT; cbn; apply functional_extensionality; intros.
   - rewrite comm. reflexivity.
   - srewrite (comm, ask_nullipotent). reflexivity.
-  - rewrite ask_ask_k. reflexivity.
-  - srewrite (morphism_bind, local_ask, bind_assoc, bind_pure_l, local_local, ask_ask_k, local_const_k).
+  - rewrite ask_ask. reflexivity.
+  - srewrite (morphism_bind, local_ask, bind_assoc, bind_pure_l, local_local, ask_ask,
+      local_const_k, local_id). reflexivity.
+  - srewrite (ask_ask, local_const_k). reflexivity.
+  - srewrite (local_id, comm, local_const, ask_ask, local_const_k, local_id, ask_nullipotent). reflexivity.
+  - srewrite (morphism_bind, local_ask, bind_assoc, bind_pure_l, ask_ask, local_local, local_local).
     reflexivity.
-  - srewrite (ask_ask_k, local_const_k, comm, local_const). reflexivity.
-  - srewrite (local_id, comm, local_const). reflexivity.
-  - srewrite (morphism_bind, local_ask, bind_assoc, bind_pure_l, ask_ask_k, local_local, local_local).
-    reflexivity.
-  - srewrite (local_local, local_const). reflexivity.
+  - srewrite (local_local, local_const, ask_ask, local_const_k, local_id, ask_nullipotent). reflexivity.
   - admit.
 Abort.

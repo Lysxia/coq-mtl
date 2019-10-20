@@ -122,15 +122,14 @@ Lemma LawfulAsk_LawfulMonadReader' r m
   `{LawfulMonad m} `{LawfulMonadReader' r m (M := _)} : LawfulAsk r m ask'.
 Proof.
   split; intros; unfold ask'.
-  - transitivity (runReaderT' (ask >>= fun z => lift u >>= fun x => pure (z, x)));
-      [ | transitivity (runReaderT' (lift u >>= fun x => ask >>= fun z => pure (z, x))) ].
+  - transitivity (runReaderT' (lift u >>= fun x => ask >>= fun z => pure (z, x)));
+      [ | transitivity (runReaderT' (ask >>= fun z => lift u >>= fun x => pure (z, x))) ].
     2: rewrite ask_comm; reflexivity.
     all: repeat (rewrite morphism_bind, ?runReaderT'_lift;
              f_equal; apply functional_extensionality; intros);
            rewrite morphism_pure; reflexivity.
   - transitivity (runReaderT' (ask >> lift u)).
-    + rewrite morphism_bind; f_equal; apply functional_extensionality; intros.
-      rewrite runReaderT'_lift; reflexivity.
+    + srewrite (morphism_bind (f := runReaderT'), runReaderT'_lift); reflexivity.
     + rewrite ask_nullipotent, runReaderT'_lift; reflexivity.
   - evar (e1 : ReaderT r m (r * r)%type). evar (e2 : ReaderT r m (r * r)%type).
     transitivity (runReaderT' e1); [ | transitivity (runReaderT' e2); [ f_equal | ] ]; subst e1 e2.
@@ -147,9 +146,6 @@ Lemma LawfulMonadReader'_LawfulAsk r m `{LawfulMonad m} (ask : m r) {LA : Lawful
 Proof.
   repeat split; intros; cbn; unfold runReaderT', MonadReader'_ask; cbn.
   1, 3: rewrite ask_nullipotent; reflexivity.
-  - transitivity (ask >>= (fun z1 => ask >>= fun z2 => runReaderT u z2 >>= fun x => runReaderT (k x) z1)).
-    + rewrite ask_ask_k. reflexivity.
-    + rewrite ask_comm_k.
-      rewrite bind_assoc; f_equal; apply functional_extensionality; intros.
-      rewrite ask_comm_k. reflexivity.
+  - setoid_rewrite ask_comm_k. srewrite (bind_assoc, ask_ask_k).
+    reflexivity.
 Qed.

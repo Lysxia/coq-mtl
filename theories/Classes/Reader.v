@@ -1,5 +1,5 @@
 
-From mtl.Classes Require Import Monad Trans.
+From mtl.Classes Require Import Tactics Monad Trans.
 From Coq Require Import Setoid FunctionalExtensionality Relations Morphisms.
 
 Implicit Types t : (Type -> Type) -> (Type -> Type).
@@ -20,10 +20,10 @@ Definition reader {r m} `{Monad m} `{MonadReader r m} {a} (f : r -> a) : m a :=
 Class LawfulAsk r m `{Monad m} (ask : m r) : Prop :=
   { (* [ask] yields the same result when called at any point. *)
     ask_comm : forall a (u : m a),
-        (ask >>= fun z =>
-         u   >>= fun x => pure (z, x))
-      = (u   >>= fun x =>
+        (u   >>= fun x =>
          ask >>= fun z => pure (z, x))
+      = (ask >>= fun z =>
+         u   >>= fun x => pure (z, x))
 
     (* [ask] has no side effects: ignoring its result is the same as not calling it. *)
   ; ask_nullipotent : forall a (u : m a),
@@ -65,15 +65,15 @@ Context {ask : m r}.
 Context {LA : LawfulAsk r m ask}.
 
 Lemma ask_comm_k a b (u : m a) (k : r -> a -> m b)
-  : (ask >>= fun z =>
-     u   >>= fun x => k z x)
-  = (u   >>= fun x =>
-     ask >>= fun z => k z x).
+  : (u   >>= fun x =>
+     ask >>= fun z => k z x)
+  = (ask >>= fun z =>
+     u   >>= fun x => k z x).
 Proof.
-  transitivity ((ask >>= fun z => u >>= fun x => pure (z, x)) >>= fun zx => k (fst zx) (snd zx));
+  transitivity ((u >>= fun x => ask >>= fun z => pure (z, x)) >>= fun zx => k (fst zx) (snd zx));
     [ | rewrite ask_comm ].
-  all: do 2 (rewrite bind_assoc; f_equal; apply functional_extensionality; intros);
-    rewrite bind_pure_l; reflexivity.
+  all: (repeat srewrite bind_assoc).
+  all: setoid_rewrite bind_pure_l; reflexivity.
 Qed.
 
 Lemma ask_ask_k a (k : r -> r -> m a)
@@ -81,11 +81,8 @@ Lemma ask_ask_k a (k : r -> r -> m a)
   = (ask >>= fun z => k z z).
 Proof.
   transitivity ((ask >>= fun z => pure (z, z)) >>= fun zz => k (fst zz) (snd zz)).
-  - rewrite <- ask_ask.
-    do 2 (rewrite bind_assoc; f_equal; apply functional_extensionality; intros).
-    rewrite bind_pure_l; reflexivity.
-  - rewrite bind_assoc; f_equal; apply functional_extensionality; intros.
-    rewrite bind_pure_l; reflexivity.
+  - rewrite <- ask_ask. do 2 (srewrite bind_assoc). srewrite bind_pure_l; reflexivity.
+  - srewrite (bind_assoc, bind_pure_l); reflexivity.
 Qed.
 
 End AskFacts.
@@ -98,8 +95,7 @@ Lemma local_const_k a (k : r -> m a)
   = ask >>= k.
 Proof.
   transitivity (ask >>= fun z => local (fun _ => z) (ask >>= k)).
-  - f_equal; apply functional_extensionality; intros.
-    rewrite morphism_bind, local_ask, ask_nullipotent, bind_pure_l.
+  - setoid_rewrite morphism_bind. srewrite (local_ask, ask_nullipotent, bind_pure_l).
     reflexivity.
   - rewrite local_const; reflexivity.
 Qed.

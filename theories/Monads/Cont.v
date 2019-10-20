@@ -72,7 +72,7 @@ Proof.
     (ask >>= fun z => runContT u (fun x => k z x)) = runContT u (fun x => ask >>= fun z => k z x)).
   { admit. }
   repeat split; intros; apply injective_runContT; cbn; apply functional_extensionality; intros.
-  - apply comm.
+  - rewrite comm. reflexivity.
   - srewrite (comm, ask_nullipotent). reflexivity.
   - rewrite ask_ask_k. reflexivity.
   - srewrite (morphism_bind, local_ask, bind_assoc, bind_pure_l, local_local, ask_ask_k, local_const_k).
